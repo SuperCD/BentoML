@@ -59,11 +59,11 @@ tests_require = [
 tests_require += cv2
 
 setuptools.setup(
-    name="BentoML",
+    name="BentoML-kube",
     version=__version__,
-    author="atalaya.io",
-    author_email="contact@atalaya.io",
-    description="BentoML: Package and Deploy Your Machine Learning Models",
+    author="SuperCD",
+    author_email="supercd84@gmail.com",
+    description="BentoML-kube: a fork of BentoML for better working in kubernetes",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=install_requires,
