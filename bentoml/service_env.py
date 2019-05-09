@@ -36,7 +36,7 @@ dependencies:
   - python={python_version}
   - pip
   - pip:
-    - bentoml=={bentoml_version}
+    - bentoml-kube=={bentoml_version}
 """
 
 CONDA_ENV_DEFAULT_NAME = 'bentoml-custom-conda-env'

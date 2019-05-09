@@ -75,7 +75,7 @@ setuptools.setup(
         'cv2': cv2,
         'test': tests_require,
     },
-    url="https://github.com/bentoml/BentoML",
+    url="https://github.com/SuperCD/BentoML",
     packages=setuptools.find_packages(exclude=['tests*']),
     classifiers=[
         "Programming Language :: Python :: 2.7",
