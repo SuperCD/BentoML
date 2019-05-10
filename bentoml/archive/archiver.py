@@ -57,10 +57,10 @@ def _generate_new_version_str():
     Generate a version string in the format of YYYY-MM-DD-Hash
     """
     time_obj = datetime.now()
-    date_string = time_obj.strftime('%Y_%m_%d')
+    date_string = time_obj.strftime('%Y%m%d')
     random_hash = uuid.uuid4().hex[:8]
 
-    return date_string + '_' + random_hash
+    return date_string + random_hash
 
 def build_template_dockerfile(bento_service, dst):
     """
