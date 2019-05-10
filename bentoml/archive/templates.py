@@ -67,6 +67,46 @@ include {service_name}/bentoml.yml
 graft {service_name}/artifacts
 """
 
+BENTO_SERVICE_DOCKERFILE_BASE_TEMPLATE = """\
+FROM continuumio/miniconda3
+
+ENTRYPOINT [ "/bin/bash", "-c" ]
+
+RUN set -x \
+     && apt-get update \
+     && apt-get install --no-install-recommends --no-install-suggests -y libpq-dev build-essential \
+     && rm -rf /var/lib/apt/lists/*
+
+# update conda and setup environment and pre-install common ML libraries to speed up docker build
+RUN conda update conda -y \
+      && conda install pip numpy scipy \
+      && pip install gunicorn six
+
+# copy requirements files
+COPY ./environment.yml /bento/environment.yml
+COPY ./requirements.txt /bento/requirements.txt
+WORKDIR /bento
+
+# update conda base env
+RUN conda env update -n base -f /bento/environment.yml
+RUN pip install -r /bento/requirements.txt
+"""
+
+BENTO_SERVICE_DOCKERFILE_UPDATE_TEMPLATE = """\
+FROM {base_image_name}
+
+ENTRYPOINT [ "/bin/bash", "-c" ]
+
+EXPOSE 5000
+
+# copy over model files
+COPY . /bento
+WORKDIR /bento
+
+# Run Gunicorn server with path to module.
+CMD ["bentoml serve-gunicorn /bento"]
+"""
+
 BENTO_SERVICE_DOCKERFILE_CPU_TEMPLATE = """\
 FROM continuumio/miniconda3
 

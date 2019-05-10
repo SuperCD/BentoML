@@ -28,7 +28,10 @@ from bentoml.utils.s3 import is_s3_url, upload_to_s3
 from bentoml.utils.tempdir import TempDirectory
 from bentoml.archive.py_module_utils import copy_used_py_modules
 from bentoml.archive.templates import BENTO_MODEL_SETUP_PY_TEMPLATE, \
-    MANIFEST_IN_TEMPLATE, BENTO_SERVICE_DOCKERFILE_CPU_TEMPLATE, INIT_PY_TEMPLATE
+    MANIFEST_IN_TEMPLATE, INIT_PY_TEMPLATE, \
+    BENTO_SERVICE_DOCKERFILE_CPU_TEMPLATE, BENTO_SERVICE_DOCKERFILE_BASE_TEMPLATE, BENTO_SERVICE_DOCKERFILE_UPDATE_TEMPLATE
+    
+    
 from bentoml.archive.config import BentoArchiveConfig
 
 DEFAULT_BENTO_ARCHIVE_DESCRIPTION = """\
@@ -59,8 +62,34 @@ def _generate_new_version_str():
 
     return date_string + '_' + random_hash
 
+def build_template_dockerfile(bento_service, dst):
+    """
+    Create a base docker image for the given bento_service
+    """
+    version = _generate_new_version_str()
+    Path(os.path.join(dst), bento_service.name).mkdir(parents=True, exist_ok=True)
+    # Update path to subfolder in the form of 'base/service_name/version/'
+    path = os.path.join(dst, bento_service.name, version)
 
-def save(bento_service, dst, version=None):
+    if os.path.exists(path):
+        raise ValueError("Template in Path: {dst} already "
+                         "exist.".format(dst=dst))
+
+    os.mkdir(path)
+    module_base_path = os.path.join(path, bento_service.name)
+    os.mkdir(module_base_path)
+
+    # write conda environment, requirement.txt
+    bento_service.env.save(path)
+
+    # write Dockerfile
+    with open(os.path.join(path, 'Dockerfile'), 'w') as f:
+        f.write(BENTO_SERVICE_DOCKERFILE_BASE_TEMPLATE)
+    
+    return path
+
+
+def save(bento_service, dst, version=None, docker_base=None, s3_endpoint = None):
     """
     Save given BentoService along with all artifacts to target path
     """
@@ -87,15 +116,15 @@ def save(bento_service, dst, version=None):
 
     if is_s3_url(dst):
         with TempDirectory() as tempdir:
-            _save(bento_service, tempdir, version)
-            upload_to_s3(full_saved_path, tempdir)
+            _save(bento_service, tempdir, version, docker_base)
+            upload_to_s3(full_saved_path, tempdir, s3_endpoint=s3_endpoint)
     else:
-        _save(bento_service, dst, version)
+        _save(bento_service, dst, version, docker_base)
 
     return full_saved_path
 
 
-def _save(bento_service, dst, version=None):
+def _save(bento_service, dst, version=None, docker_base=None):
     Path(os.path.join(dst), bento_service.name).mkdir(parents=True, exist_ok=True)
     # Update path to subfolder in the form of 'base/service_name/version/'
     path = os.path.join(dst, bento_service.name, version)
@@ -143,9 +172,13 @@ def _save(bento_service, dst, version=None):
     with open(os.path.join(path, 'MANIFEST.in'), 'w') as f:
         f.write(MANIFEST_IN_TEMPLATE.format(service_name=bento_service.name))
 
-    # write Dockerfile
-    with open(os.path.join(path, 'Dockerfile'), 'w') as f:
-        f.write(BENTO_SERVICE_DOCKERFILE_CPU_TEMPLATE)
+    if (docker_base == None):
+        # write Dockerfile
+        with open(os.path.join(path, 'Dockerfile'), 'w') as f:
+            f.write(BENTO_SERVICE_DOCKERFILE_CPU_TEMPLATE)
+    else:
+        with open(os.path.join(path, 'Dockerfile'), 'w') as f:
+            f.write(BENTO_SERVICE_DOCKERFILE_UPDATE_TEMPLATE.format(base_image_name=docker_base))
 
     # write bentoml.yml
     config = BentoArchiveConfig()

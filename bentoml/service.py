@@ -329,6 +329,10 @@ class BentoService(BentoServiceBase):
         from bentoml import archive
         return archive.save(self, *args, **kwargs)
 
+    def build_template_dockerfile(self, *args, **kwargs):
+        from bentoml import archive
+        return archive.build_template_dockerfile(self, *args, **kwargs)
+
     @classmethod
     def pack(cls, *args, **kwargs):
         if args and isinstance(args[0], ArtifactCollection):

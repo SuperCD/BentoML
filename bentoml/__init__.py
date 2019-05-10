@@ -25,8 +25,8 @@ from bentoml.service import BentoService, api_decorator as api, \
     env_decorator as env, artifacts_decorator as artifacts, \
     ver_decorator as ver
 from bentoml.server import metrics
-from bentoml.archive import save, load
+from bentoml.archive import save, load, build_template_dockerfile
 
 __all__ = [
-    '__version__', 'api', 'env', 'artifacts', 'BentoService', 'save', 'load', 'handlers', 'metrics'
+    '__version__', 'api', 'env', 'artifacts', 'BentoService', 'save', 'load', 'build_template_dockerfile', 'handlers', 'metrics'
 ]

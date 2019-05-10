@@ -35,7 +35,7 @@ def is_s3_url(url):
         return False
 
 
-def upload_to_s3(s3_url, file_path):
+def upload_to_s3(s3_url, file_path, s3_endpoint = None):
     """
     Update files in the file_path to the s3 location
     """
@@ -43,8 +43,8 @@ def upload_to_s3(s3_url, file_path):
     parse_result = urlparse(s3_url)
     bucket = parse_result.netloc
     base_path = parse_result.path
-
-    s3_client = boto3.client('s3')
+    
+    s3_client = boto3.client('s3', endpoint_url = s3_endpoint)
 
     for root, _, files in os.walk(file_path):
         for file_name in files:
